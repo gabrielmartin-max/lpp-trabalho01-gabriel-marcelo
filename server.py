@@ -70,10 +70,11 @@ async def abrir_vila(sid, dados=None):
     if estado["fase"] != "aguardando":
         await recusar(sid, "A temporada já foi aberta", pedido)
         return
-        
-    estado["fase"] = "aberta"
-    await sio.emit("vila.iniciada", fato(pedido))  # FATO para todos
 
+    estado["fase"] = "aberta"
+    sio.start_background_task(producao)  # nova linha
+    await sio.emit("vila.iniciada", fato(pedido))  # FATO para todos
+        
 
 @sio.on("construcao.solicitada")  # PEDIDO do Jogador
 async def construir(sid, dados=None):
@@ -99,3 +100,26 @@ async def construir(sid, dados=None):
     estado["em_obra"] += 1
     nome = jogadores[sid]["nome"]
     await sio.emit("construcao.iniciada", fato(pedido, por=nome))  # FATO para todos
+    sio.start_background_task(obra, nome)
+    
+async def producao():
+    """Temporizador do servidor: FONTE de eventos. Ninguém clica aqui."""
+    while estado["fase"] == "aberta":
+        await sio.sleep(INTERVALO)  # sio.sleep não trava o servidor
+        if estado["fase"] != "aberta":
+            break
+        estado["leite"] += estado["producao"]
+        await sio.emit("recurso.produzido", fato("temporizador"))
+
+
+async def obra(nome):
+    """Temporizador da obra: depois de TEMPO_OBRA, a queijaria fica pronta."""
+    await sio.sleep(TEMPO_OBRA)
+    if estado["fase"] != "aberta":
+        return
+    estado["trabalhadores"] -= 1
+    estado["em_obra"] -= 1
+    estado["concluidas"] += 1
+    estado["producao"] += GANHO_OBRA  # cada queijaria aumenta a ordenha
+    causa = "construcao.iniciada (temporizador)"
+    await sio.emit("construcao.concluida", fato(causa, por=nome))

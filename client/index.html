@@ -340,6 +340,17 @@
           jogo.recusado(d.motivo);
         });
 
+        ouvir("recurso.produzido", "atualiza o leite e mostra o +N", (d) => {
+          atualizar(d);
+          jogo.recursoProduzido(d.estado);
+        });
+
+        ouvir("construcao.concluida", "transforma o canteiro em queijaria pronta", (d) => {
+          atualizar(d);
+          avisar("Queijaria de " + d.por + " pronta! A produção de leite aumentou.", "ok");
+          jogo.obraConcluida(d.estado);
+        });
+
       }
 
 

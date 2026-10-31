@@ -317,8 +317,15 @@
         // ETAPA 5: ouvir "recurso.produzido"     -> jogo.recursoProduzido(...)
         //          e "construcao.concluida"      -> jogo.obraConcluida(...)
         // ETAPA 6: ouvir "vila.encerrada"        -> jogo.vilaEncerrada()
+
+        ouvir("estado.sincronizado", "guarda o estado e desenha a vila", (d) => {
+          atualizar(d);
+          jogo.mostrarEstado(d.estado);
+        });
       }
 
+
+      
       // ===== PEDIDOS (emit): o cliente PEDE algo ao servidor =====
       // pedir(evento)
       function abrirVila() {

@@ -329,6 +329,13 @@
           jogo.vilaIniciada();
         });
 
+        ouvir("construcao.iniciada", "mostra o canteiro de obras", (d) => {
+          atualizar(d);
+          avisar(d.por + " iniciou uma queijaria");
+          jogo.obraIniciada(d.estado);
+        });
+
+
       }
 
 
@@ -339,7 +346,7 @@
         pedir("vila.abertura_solicitada");
       }
       function construir() {
-        // ETAPA 3: pedir "construcao.solicitada"
+        pedir("construcao.solicitada");
       }
       function encerrarVila() {
         // ETAPA 6: pedir "vila.encerramento_solicitado"

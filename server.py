@@ -75,11 +75,27 @@ async def abrir_vila(sid, dados=None):
     await sio.emit("vila.iniciada", fato(pedido))  # FATO para todos
 
 
-    @sio.on("construcao.solicitada")  # PEDIDO do Jogador
-    async def construir(sid, dados=None):
-        pedido = "construcao.solicitada"
-        estado["leite"] -= CUSTO
-        estado["trabalhadores"] += 1
-        estado["em_obra"] += 1
-        nome = jogadores[sid]["nome"]
-        await sio.emit("construcao.iniciada", fato(pedido, por=nome))  # FATO para todos
+@sio.on("construcao.solicitada")  # PEDIDO do Jogador
+async def construir(sid, dados=None):
+    pedido = "construcao.solicitada"
+
+    # Valide TUDO antes de alterar o estado e sem await no meio:
+    # assim, dois pedidos simultâneos são decididos um de cada vez.
+    if estado["fase"] != "aberta":
+        motivo = "A temporada não está aberta"
+    elif estado["leite"] < CUSTO:
+        motivo = "Leite insuficiente"
+    elif estado["trabalhadores"] >= estado["limite"]:
+        motivo = "Sem ordenhador livre"
+    else:
+        motivo = None
+
+    if motivo:
+        await recusar(sid, motivo, pedido)  # só quem pediu recebe
+        return
+
+    estado["leite"] -= CUSTO
+    estado["trabalhadores"] += 1
+    estado["em_obra"] += 1
+    nome = jogadores[sid]["nome"]
+    await sio.emit("construcao.iniciada", fato(pedido, por=nome))  # FATO para todos
